@@ -1,17 +1,37 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
         applicationId "com.wpq.android.practice"
-        minSdkVersion 21
-        targetSdkVersion 29
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
+        // 'multidex-config.pro'和build.gradle同一个目录
+        multiDexKeepProguard file('multidex-config.pro')
+
+        ndk {
+            //设置支持的SO库架构
+            abiFilters 'armeabi-v7a' //, 'x86', 'x86_64', 'arm64-v8a'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    // https://stackoverflow.com/questions/56748334/how-to-get-viewmodel-by-viewmodels-fragment-ktx
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     buildTypes {
@@ -21,18 +41,62 @@ android {
         }
     }
 
+    lintOptions {
+        // true--错误发生后停止gradle构建
+        abortOnError false
+        // true--显示错误的所有发生位置，不截取
+        showAll true
+    }
+
+    packagingOptions {
+//        doNotStrip "*/armeabi-v7a/*.so"
+//        doNotStrip "*/armeabi/*.so"
+//        doNotStrip "*/arm64-v8a/*.so"
+        doNotStrip "*/armeabi-v7a/libdu.so"
+        doNotStrip "*/armeabi/libdu.so"
+
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
+
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
+
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.google.android.material:material:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.navigation:navigation-fragment:2.3.0'
-    implementation 'androidx.navigation:navigation-ui:2.3.0'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    implementation("androidx.appcompat:appcompat:$rootProject.appcompatVersion") {
+        force = true
+    }
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.constraintVersion"
+    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation "androidx.navigation:navigation-fragment:$rootProject.navigationVersion"
+    implementation "androidx.navigation:navigation-ui:$rootProject.navigationVersion"
+    implementation "androidx.cardview:cardview:$rootProject.cardviewVersion"
+    // Google的流式布局 https://github.com/google/flexbox-layout
+    implementation "com.google.android:flexbox:$rootProject.flexboxVersion"
+    implementation "androidx.multidex:multidex:$rootProject.multidexVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlin_version"
+    // 协程 https://github.com/Kotlin/kotlinx.coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.coroutinesVersion"
+    // https://developer.android.com/kotlin/ktx
+    implementation "androidx.activity:activity-ktx:1.1.0"
+    implementation "androidx.fragment:fragment-ktx:1.2.5"
+    //lifecycle 引入ViewModel类
+    implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.lifecycle"
+    kapt "androidx.lifecycle:lifecycle-common-java8:$rootProject.lifecycle"
+
 }
